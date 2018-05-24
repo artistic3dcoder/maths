@@ -1,115 +1,129 @@
-"""3d Vector class"""
+"""3d Vector class."""
 import math
 
 
 class Vector3(object):
+    """Provides a Vector3 object with common Vector3 operations.
 
-    def __init__(self, *args):
-        """Return a new Vector3 from a sequence of  floats."""
-        if len(args) == 1 and type(args) in [list, tuple]:
-            if len(args[0]) == 3:
-                for item in args[0]:
-                    if type(item) not in (float, int):
-                        raise TypeError(self._get_error_code(2))
-                self._x, self._y, self._z = args[0]
+    Args:
+        *values (float, int, tuple, list): default values for vector initialization.
+                                           If no value is supplied vector will be initialized to 0.0, 0.0, 0.0
+                                           Ints will be converted to floats
+
+    """
+    _VALID_TYPES = (int, float)
+    _ERRORS = {0: "argument must be of type Vector3",
+               1: "argument must be of type float or int",
+               2: "Input value should be a tuple or list containing three float values"}
+    
+    def __init__(self, *values):
+        if len(values) == 1 and type(values) in [list, tuple]:
+            if len(values[0]) == 3:
+                for item in values[0]:
+                    if type(item) not in self._VALID_TYPES:
+                        raise TypeError(self._ERRORS[2])
+                self._x, self._y, self._z = float(values[0])
             else:
-                raise TypeError(self._get_error_code(2))
-        elif len(args) == 3:
-            for item in args:
-                if type(item) not in (float, int):
-                    raise TypeError(self._get_error_code(2))
-            self._x = args[0]
-            self._y = args[1]
-            self._z = args[2]
+                raise TypeError(self._ERRORS[2])
+        elif len(values) == 3:
+            for item in values:
+                if type(item) not in self._VALID_TYPES:
+                    raise TypeError(self._ERRORS[2])
+            self._x = float(values[0])
+            self._y = float(values[1])
+            self._z = float(values[2])
         else:
-            raise TypeError(self._get_error_code(2))
+            raise TypeError(self._ERRORS[2])
 
     def __repr__(self):
         return "Vector3: [{0}, {1}, {2}]".format(self._x, self._y, self._z)
 
     def __add__(self, other):
         if not self._type_check(other):
-            raise TypeError(self._get_error_code(0))
-        new = [a + b for a, b in zip(self.as_tuple(), other.as_tuple())]
+            raise TypeError(self._ERRORS[0])
+        new = [a + b for a, b in zip(self.as_list(), other.as_list())]
         return Vector3(new)
 
     def __iadd__(self, other):
         if not self._type_check(other):
-            raise TypeError(self._get_error_code(0))
-        self._x, self._y, self._z = [a + b for a, b in zip(self.as_tuple(), other.as_tuple())]
+            raise TypeError(self._ERRORS[0])
+        self._x, self._y, self._z = [a + b for a, b in zip(self.as_list(), other.as_list())]
         return self
 
     def __sub__(self, other):
         if not self._type_check(other):
-            raise TypeError(self._get_error_code(0))
-        new = [a - b for a, b in zip(self.as_tuple(), other.as_tuple())]
+            raise TypeError(self._ERRORS[0])
+        new = [a - b for a, b in zip(self.as_list(), other.as_list())]
         return Vector3(new)
 
     def __isub__(self, other):
         if not self._type_check(other):
-            raise TypeError(self._get_error_code(0))
-        self._x, self._y, self._z = [a - b for a, b in zip(self.as_tuple(), other.as_tuple())]
+            raise TypeError(self._ERRORS[0])
+        self._x, self._y, self._z = [a - b for a, b in zip(self.as_list(), other.as_list())]
         return self
 
     def __mul__(self, other):
         if not self._type_check_double(other):
-            raise TypeError(self._get_error_code(1))
-        new = [a * other for a in self.as_tuple()]
+            raise TypeError(self._ERRORS[1])
+        new = [a * other for a in self.as_list()]
         return Vector3(new)
 
     def __imul__(self, other):
         if not self._type_check_double(other):
-            raise TypeError(self._get_error_code(1))
-        self._x, self._y, self._z = [a * other for a in self.as_tuple()]
+            raise TypeError(self._ERRORS[1])
+        self._x, self._y, self._z = [a * other for a in self.as_list()]
         return self
 
     def __div__(self, other):
         if not self._type_check_double(other):
-            raise TypeError(self._get_error_code(1))
-        new = [a / other for a in self.as_tuple()]
+            raise TypeError(self._ERRORS[1])
+        new = [a / other for a in self.as_list()]
         return Vector3(new)
 
     def __idiv__(self, other):
         if not self._type_check_double(other):
-            raise TypeError(self._get_error_code(1))
-        self._x, self._y, self._z = [a / other for a in self.as_tuple()]
+            raise TypeError(self._ERRORS[1])
+        self._x, self._y, self._z = [a / other for a in self.as_list()]
         return self
 
     @property
     def x(self):
+        """float: x axis."""
         return self._x
 
     @x.setter
     def x(self, value):
-        if type(value) in (float, int):
+        if type(value) in self._VALID_TYPES:
             self._x = value
         else:
-            raise TypeError("float or int value required.")
+            raise TypeError(self._ERRORS[1])
 
     @property
     def y(self):
+        """float: y axis."""
         return self._y
 
     @y.setter
     def y(self, value):
-        if type(value) in (float, int):
+        if type(value) in self._VALID_TYPES:
             self._y = value
         else:
-            raise TypeError("float or int value required.")
+            raise TypeError(self._ERRORS[1])
 
     @property
     def z(self):
+        """float: z axis."""
         return self._z
 
     @z.setter
     def z(self, value):
-        if type(value) in (float, int):
+        if type(value) in self._VALID_TYPES:
             self._z = value
         else:
-            raise TypeError("float or int value required.")
+            raise TypeError(self._ERRORS[1])
 
     def angle_to(self, vector3):
-        """Return the angle from this Vector3 to incoming Vector3
+        """Return the angle from this Vector3 to incoming Vector3.
 
         The angle between the two vectors we  is
         acos(V1.dot(V2)/(V1.magnitude * V2.magnitude)).
@@ -119,19 +133,22 @@ class Vector3(object):
         Returns:
             float: angle between two vectors
         """
-
         dot = self.dot(vector3)
         mag = self.magnitude() * vector3.magnitude()
-        acos = math.acos(dot/mag)
+        acos = math.acos(round(dot/mag, 6))
         angle = acos * 180 / math.pi
         return angle
 
-    def as_tuple(self):
-        """Return this Vector3 as a list"""
+    def as_list(self):
+        """Return this Vector3 as a list.
+        
+        Returns:
+            list: xyz components
+        """
         return self._x, self._y, self._z
 
     def cross(self, vector3):
-        """Return the cross product between this Vector3 and an incoming Vector3
+        """Return the cross product between this Vector3 and an incoming Vector3.
 
         a x b = (a2 * b3 - a3 * b2,
                  a3 * b1 - a1 * b3,
@@ -170,29 +187,19 @@ class Vector3(object):
             float: distance from this Vector3 to incoming Vector3.
         """
         if not self._type_check(vector3):
-            raise TypeError(self._get_error_code(0))
+            raise TypeError(self._ERRORS[0])
         new = self - vector3
         return new.magnitude()
 
     @staticmethod
     def _type_check(data):
         """Check that this type coming in is of type Vector3"""
-        if type(data) != Vector3:
+        if data.__class__.__name__ != "Vector3":
             return False
         return True
 
-    @staticmethod
-    def _type_check_double(data):
+    def _type_check_double(self, data):
         """Check that this type coming in is of type float"""
-        if type(data) not in (float, int):
+        if type(data) not in self._VALID_TYPES:
             return False
         return True
-
-    @staticmethod
-    def _get_error_code(code):
-        if code == 0:
-            return "argument must be of type Vector3"
-        if code == 1:
-            return "argument must be of type float or int"
-        if code == 2:
-            return "Input value should be a tuple or list containing with three float values."
