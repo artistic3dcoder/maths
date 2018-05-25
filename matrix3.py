@@ -287,7 +287,54 @@ class Matrix3(object):
         m9 = r1[0] * r2[1] - r2[0] * r1[1]
 
         return Matrix3(m1, m2, m3, m4, m5, m6, m7, m8, m9)
+    
+    def rotation_matrix(self, rotation, rotation_order="zyx"):
+        """Convert a rotation to a rotation matrix.
 
+        Args:
+            rotation (tuple): rotation XYZ
+            rotation_order (str): order of rotation 'xyz', 'zyx'
+                                  defaults to 'zyx'
+
+        Returns:
+            rotation matrix
+        """
+        x = math.radians(rotation[0])
+        y = math.radians(rotation[1])
+        z = math.radians(rotation[2])
+
+        cos = math.cos
+        sin = math.sin
+        if rotation_order == 'zyx':
+            index_0 = cos(y) * cos(z)
+            index_1 = cos(z) * sin(x) * sin(y) - cos(x) * sin(z)
+            index_2 = cos(x) * cos(z) * sin(y) + sin(x) * sin(z)
+
+            index_3 = cos(y) * sin(z)
+            index_4 = cos(x) * cos(z) + sin(x) * sin(y) * sin(z)
+            index_5 = -cos(z) * sin(x) + cos(x) * sin(y) * sin(z)
+
+            index_6 = -sin(y)
+            index_7 = -cos(y) * sin(x)
+            index_8 = cos(x) * cos(y)
+        elif rotation_order == 'xyz':
+            index_0 = cos(y) * cos(z)
+            index_1 = -cos(z) * sin(z)
+            index_2 = sin(y)
+
+            index_3 = cos(x) * sin(z) + sin(x) * sin(y) * cos(z)
+            index_4 = cos(x) * cos(z) - sin(x) * sin(y) * sin(z)
+            index_5 = -sin(x) * cos(y)
+
+            index_6 = sin(x) * sin(z) - cos(x) * sin(y) * cos(z)
+            index_7 = sin(x) * cos(z) + cos(x) * sin(y) * sin(z)
+            index_8 = cos(x) * cos(y)
+
+        rot_mat = ((index_0, index_1, index_2),
+                   (index_3, index_4, index_5),
+                   (index_6, index_7, index_8))
+
+        return rot_mat
     def transpose(self, matrix3=None):
         """Calculate a transposed matrix3.
 
