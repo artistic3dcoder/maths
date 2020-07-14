@@ -1,5 +1,5 @@
 """3d Vector class."""
-from typing import Union, List
+from typing import Union, List, Tuple
 from collections import Iterable
 from math import pi, acos, sqrt, pow
 
@@ -19,20 +19,52 @@ class Vector3(object):
     """
     _ACCEPTED_TYPES = (int, float)
 
-    def __init__(self, x=None, y=None, z=None):
+    def __init__(self,
+                 x: Union[float, int, tuple, list] = None,
+                 y: Union[float, int] = None,
+                 z: Union[float, int] = None):
+        """Initialization of Vector3 class.
 
+        Args:
+            x: X value of Vector 3.
+               If a single value is passed in it will be propagated to z, y, and z.
+               If a Tuple or List is passed in of length three it will be distributed to x, y, and z.
+            y: Y value of Vector 3.
+            z: Z value of Vector 3.
+
+        Raises:
+                Vector3ComponentArgumentError: If arguments provided when instantiating Vector are incorrect.
+        """
+        self._x, self._y, self._z = self._resolve_args(x=x, y=y, z=z)
+
+    def _resolve_args(self,
+                      x: Union[float, int, tuple, list] = None,
+                      y: Union[float, int] = None,
+                      z: Union[float, int] = None) -> Tuple[float, float, float]:
+        """Resolves Vector3 class args.
+
+            Args:
+                x: X value of Vector 3.
+                   If a single value is passed in it will be propagated to z, y, and z.
+                   If a Tuple or List is passed in of length three it will be distributed to x, y, and z.
+                y: Y value of Vector 3.
+                z: Z value of Vector 3.
+
+            Raises:
+                Vector3ComponentArgumentError: If arguments provided when instantiating Vector are incorrect.
+        """
         if x is None and y is None and z is None:
-            self._x = self._y = self._z = 0.0
+            return 0.0, 0.0, 0.0
         elif x and y is None and z is None:
             if isinstance(x, Iterable) and len(x) == 3:
                 for v in x:
                     if not isinstance(v, self._ACCEPTED_TYPES):
                         raise Vector3ComponentArgumentError(invalid_type=",".join((type(z).__name__ for z in x)))
-                self._x, self._y, self._z = float(x[0]), float(x[1]), float(x[2])
+                return float(x[0]), float(x[1]), float(x[2])
             else:
                 if not isinstance(x, self._ACCEPTED_TYPES):
                     raise Vector3ComponentArgumentError(invalid_type=type(x).__name__)
-                self._x = self._y = self._z = float(x)
+                return float(x), float(x), float(x)
         else:
             if x and not isinstance(x, self._ACCEPTED_TYPES):
                 raise Vector3ComponentArgumentError(invalid_type=type(x).__name__)
@@ -40,12 +72,10 @@ class Vector3(object):
                 raise Vector3ComponentArgumentError(invalid_type=type(y).__name__)
             if z and not isinstance(z, self._ACCEPTED_TYPES):
                 raise Vector3ComponentArgumentError(invalid_type=type(z).__name__)
-            self._x = float(x) if x else 0.0
-            self._y = float(y) if y else 0.0
-            self._z = float(z) if z else 0.0
+            return float(x) if x else 0.0, float(y) if y else 0.0, float(z) if z else 0.0
 
     def __repr__(self) -> str:
-        return "Vector3: [{0}, {1}, {2}]".format(self._x, self._y, self._z)
+        return f"Vector3: [{self._x}, {self._y}, {self._z}]"
 
     def __add__(self, other: "Vector3") -> "Vector3":
         """Add another Vector3 and return a new Vector3"""
@@ -135,6 +165,24 @@ class Vector3(object):
         else:
             raise NumTypeArgumentError(invalid_type=type(value))
 
+    @property
+    def magnitude(self) -> float:
+        """Return the length of the Vector.
+
+        Note:
+            To compute the magnitude (length) of a vector:
+            1. Compute each component to the power of 2
+            2. Add the products together
+            3. Compute the sqrt of the result.
+
+
+            Given: a = [x, y, z]
+
+            mag =  square_root (a.x*a.x + a.y*a.y + a.z*a.z)
+
+        """
+        return sqrt(pow(self._x, 2) + pow(self._y, 2) + pow(self._z, 2))
+
     def angle_to(self, other: "Vector3", precision: int = 6) -> float:
         """Return the angle from this Vector3 to incoming Vector3 in degrees.
 
@@ -147,7 +195,7 @@ class Vector3(object):
             acos(V1.dot(V2)/(V1.magnitude * V2.magnitude)).
             This returns the angle in radians so it is then converted to an angle.
         """
-        acos_ = acos(self.dot(other) / (self.magnitude() * other.magnitude()))
+        acos_ = acos(self.dot(other) / (self.magnitude * other.magnitude))
         angle = acos_ * 180 / pi
         return round(angle, precision)
 
@@ -189,26 +237,9 @@ class Vector3(object):
         """
         return self._x * other.x + self._y * other.y + self._z * other.z
 
-    def magnitude(self) -> float:
-        """Return the length of the Vector.
-
-        Note:
-            To compute the magnitude (length) of a vector:
-            1. Compute each component to the power of 2
-            2. Add the products together
-            3. Compute the sqrt of the result.
-
-
-            Given: a = [x, y, z]
-
-            mag =  square_root (a.x*a.x + a.y*a.y + a.z*a.z)
-
-        """
-        return sqrt(pow(self._x, 2) + pow(self._y, 2) + pow(self._z, 2))
-
     def normalize(self) -> None:
         """Normalize this Vector3."""
-        m = self.magnitude()
+        m = self.magnitude
         self._x = self._x / m
         self._y = self._y / m
         self._z = self._z / m
@@ -223,7 +254,7 @@ class Vector3(object):
             mag = square_root (a.x*a.x + a.y*a.y + a.z*a.z)
             normalized_a = [a.x/mag, a.y/mag, a.z/mag]
         """
-        m = self.magnitude()
+        m = self.magnitude
         return Vector3(self._x/m, self._y/m, self._z/m)
 
     def distance_to(self, other: "Vector3") -> float:
@@ -238,4 +269,4 @@ class Vector3(object):
         if not isinstance(other, type(self)):
             raise Vector3ArgumentError(invalid_type=type(other))
         new = self - other
-        return new.magnitude()
+        return new.magnitude

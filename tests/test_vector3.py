@@ -93,7 +93,7 @@ def test_as_tuple():
 def test_magnitude():
     from maths.vector3 import Vector3
     a = Vector3(0, 0, 90)
-    mag = a.magnitude()
+    mag = a.magnitude
     assert mag == 90
 
 
