@@ -1,12 +1,13 @@
 """3d Vector class."""
 from typing import Union, List, Tuple
 from collections import Iterable
-from math import pi, acos, sqrt, pow
+from math import sqrt, pow
 
-from maths.errors import Vector3ArgumentError, NumTypeArgumentError, Vector3ComponentArgumentError
+from maths.errors import VectorArgumentError, NumTypeArgumentError, VectorComponentArgumentError
+from maths.vector import Vector
 
 
-class Vector3(object):
+class Vector3(Vector):
     """Provides a Vector3 object with common Vector3 operations.
 
     Notes:
@@ -17,8 +18,6 @@ class Vector3(object):
           Example: Vector3(10) would result in a Vector3 with values [10.0, 10.0, 10.0]
 
     """
-    _ACCEPTED_TYPES = (int, float)
-
     def __init__(self,
                  x: Union[float, int, tuple, list] = None,
                  y: Union[float, int] = None,
@@ -35,6 +34,7 @@ class Vector3(object):
         Raises:
                 Vector3ComponentArgumentError: If arguments provided when instantiating Vector are incorrect.
         """
+        super(Vector3, self).__init__()
         self._x, self._y, self._z = self._resolve_args(x=x, y=y, z=z)
 
     def _resolve_args(self,
@@ -59,55 +59,37 @@ class Vector3(object):
             if isinstance(x, Iterable) and len(x) == 3:
                 for v in x:
                     if not isinstance(v, self._ACCEPTED_TYPES):
-                        raise Vector3ComponentArgumentError(invalid_type=",".join((type(z).__name__ for z in x)))
+                        raise VectorComponentArgumentError(invalid_type=",".join((type(z).__name__ for z in x)))
                 return float(x[0]), float(x[1]), float(x[2])
             else:
                 if not isinstance(x, self._ACCEPTED_TYPES):
-                    raise Vector3ComponentArgumentError(invalid_type=type(x).__name__)
+                    raise VectorComponentArgumentError(invalid_type=type(x).__name__)
                 return float(x), float(x), float(x)
         else:
             if x and not isinstance(x, self._ACCEPTED_TYPES):
-                raise Vector3ComponentArgumentError(invalid_type=type(x).__name__)
+                raise VectorComponentArgumentError(invalid_type=type(x).__name__)
             if y and not isinstance(y, self._ACCEPTED_TYPES):
-                raise Vector3ComponentArgumentError(invalid_type=type(y).__name__)
+                raise VectorComponentArgumentError(invalid_type=type(y).__name__)
             if z and not isinstance(z, self._ACCEPTED_TYPES):
-                raise Vector3ComponentArgumentError(invalid_type=type(z).__name__)
+                raise VectorComponentArgumentError(invalid_type=type(z).__name__)
             return float(x) if x else 0.0, float(y) if y else 0.0, float(z) if z else 0.0
 
     def __repr__(self) -> str:
         return f"Vector3: [{self._x}, {self._y}, {self._z}]"
 
-    def __add__(self, other: "Vector3") -> "Vector3":
-        """Add another Vector3 and return a new Vector3"""
-        if not isinstance(other, type(self)):
-            raise Vector3ArgumentError(invalid_type=type(other))
-        return Vector3([a + b for a, b in zip(self.as_tuple(), other.as_tuple())])
-
     def __iadd__(self, other: "Vector3") -> "self":
         """Add another Vector3 and return self"""
         if not isinstance(other, type(self)):
-            raise Vector3ArgumentError(invalid_type=type(other))
+            raise VectorArgumentError(invalid_type=type(other))
         self._x, self._y, self._z = [a + b for a, b in zip(self.as_tuple(), other.as_tuple())]
         return self
-
-    def __sub__(self, other: "Vector3") -> "Vector3":
-        """Subtract another Vector3 and return a new Vector3"""
-        if not isinstance(other, type(self)):
-            raise Vector3ArgumentError(invalid_type=type(other))
-        return Vector3([a - b for a, b in zip(self.as_tuple(), other.as_tuple())])
 
     def __isub__(self, other: "Vector3") -> "self":
         """Subtract another Vector3 and return self."""
         if not isinstance(other, type(self)):
-            raise Vector3ArgumentError(invalid_type=type(other))
+            raise VectorArgumentError(invalid_type=type(other))
         self._x, self._y, self._z = [a - b for a, b in zip(self.as_tuple(), other.as_tuple())]
         return self
-
-    def __mul__(self, other: Union[int, float]) -> "Vector3":
-        """Multiply by a number and return a new Vector3."""
-        if not isinstance(other, self._ACCEPTED_TYPES):
-            raise NumTypeArgumentError(invalid_type=type(other))
-        return Vector3([a * other for a in self.as_tuple()])
 
     def __imul__(self, other: Union[int, float]) -> "self":
         """Multiply by a number and return self."""
@@ -115,12 +97,6 @@ class Vector3(object):
             raise NumTypeArgumentError(invalid_type=type(other))
         self._x, self._y, self._z = [a * other for a in self.as_tuple()]
         return self
-
-    def __truediv__(self, other: Union[int, float]) -> "Vector3":
-        """Divide by a number and return a new Vector3."""
-        if not isinstance(other, self._ACCEPTED_TYPES):
-            raise NumTypeArgumentError(invalid_type=type(other))
-        return Vector3([a / other for a in self.as_tuple()])
 
     def __itruediv__(self, other: Union[int, float]) -> "self":
         """Divide by a number and return self."""
@@ -183,22 +159,6 @@ class Vector3(object):
         """
         return sqrt(pow(self._x, 2) + pow(self._y, 2) + pow(self._z, 2))
 
-    def angle_to(self, other: "Vector3", precision: int = 6) -> float:
-        """Return the angle from this Vector3 to incoming Vector3 in degrees.
-
-        Args:
-            other: Vector3 to measure angle to.
-            precision: how many decimals to round to when determining acos.
-
-        Note:
-            The angle between the two vectors is
-            acos(V1.dot(V2)/(V1.magnitude * V2.magnitude)).
-            This returns the angle in radians so it is then converted to an angle.
-        """
-        acos_ = acos(self.dot(other) / (self.magnitude * other.magnitude))
-        angle = acos_ * 180 / pi
-        return round(angle, precision)
-
     def as_tuple(self) -> List[float]:
         """Return this Vector3's components as a X, Y, Z tuple."""
         return self._x, self._y, self._z
@@ -256,17 +216,3 @@ class Vector3(object):
         """
         m = self.magnitude
         return Vector3(self._x/m, self._y/m, self._z/m)
-
-    def distance_to(self, other: "Vector3") -> float:
-        """Returns the magnitude between this Vector3 and incoming Vector3.
-
-        Args:
-            other: Vector3 to measure distance to.
-
-        Note:
-            Distance from this Vector3 to incoming Vector3.
-        """
-        if not isinstance(other, type(self)):
-            raise Vector3ArgumentError(invalid_type=type(other))
-        new = self - other
-        return new.magnitude

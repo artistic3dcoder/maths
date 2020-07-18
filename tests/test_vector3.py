@@ -1,5 +1,3 @@
-
-
 def test_init():
     from maths.vector3 import Vector3
     a = Vector3(0, 0, 0)
