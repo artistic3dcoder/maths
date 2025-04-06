@@ -218,7 +218,6 @@ class Matrix3(object):
         |g h i|
         The determinant is found using:
         det(m) = a(ei - fh) - b(di - fg) + c(dh - eg)
-
         Returns:
             float: determinant of the matrix
         """
@@ -338,8 +337,8 @@ class Matrix3(object):
     def transpose(self, matrix3=None):
         """Calculate a transposed matrix3.
 
-        |a b c|   |a d c|
-        |d e f| = |b e f|
+        |a b c|   |a d g|
+        |d e f| = |b e h|
         |g h i|   |c f i|
 
         Args:
