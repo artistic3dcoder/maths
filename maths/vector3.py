@@ -1,9 +1,11 @@
 """3d Vector class."""
-from typing import Union, List, Tuple
-from collections import Iterable
-from math import pi, acos, sqrt, pow
+from __future__ import annotations
 
-from maths.errors import Vector3ArgumentError, NumTypeArgumentError, Vector3ComponentArgumentError
+from collections.abc import Iterable
+from math import pi, acos, sqrt, pow
+from typing import Self
+
+from .errors import Vector3ArgumentError, NumTypeArgumentError, Vector3ComponentArgumentError
 
 
 class Vector3(object):
@@ -12,17 +14,18 @@ class Vector3(object):
     Notes:
         - Argument values should be either floats or ints, ints will be converted to floats.
         - Providing no values will result in the Vector3 being filled with no values.
-          Example :Vector3() would result in a Vector3 with the values [0.0, 0.0, 0.0]
+          Example : Vector3() would result in a Vector3 with the values [0.0, 0.0, 0.0]
         - Providing a single value in x only will result in the Vector3 being filled with those values.
-          Example: Vector3(10) would result in a Vector3 with values [10.0, 10.0, 10.0]
+          Example : Vector3(10) would result in a Vector3 with values [10.0, 10.0, 10.0]
 
     """
+    __slots__ = ("_x", "_y", "_z")
     _ACCEPTED_TYPES = (int, float)
 
     def __init__(self,
-                 x: Union[float, int, tuple, list] = None,
-                 y: Union[float, int] = None,
-                 z: Union[float, int] = None):
+                 x: float | int | tuple | list = None,
+                 y: float | int = None,
+                 z: float | int = None):
         """Initialization of Vector3 class.
 
         Args:
@@ -38,9 +41,9 @@ class Vector3(object):
         self._x, self._y, self._z = self._resolve_args(x=x, y=y, z=z)
 
     def _resolve_args(self,
-                      x: Union[float, int, tuple, list] = None,
-                      y: Union[float, int] = None,
-                      z: Union[float, int] = None) -> Tuple[float, float, float]:
+                      x: float | int | tuple | list = None,
+                      y: float | int = None,
+                      z: float | int = None) -> tuple[float, float, float]:
         """Resolves Vector3 class args.
 
             Args:
@@ -55,24 +58,30 @@ class Vector3(object):
         """
         if x is None and y is None and z is None:
             return 0.0, 0.0, 0.0
-        elif x and y is None and z is None:
+        elif x is not None and y is None and z is None:
             if isinstance(x, Iterable) and len(x) == 3:
-                for v in x:
-                    if not isinstance(v, self._ACCEPTED_TYPES):
-                        raise Vector3ComponentArgumentError(invalid_type=",".join((type(z).__name__ for z in x)))
-                return float(x[0]), float(x[1]), float(x[2])
+                x0, x1, x2 = x  # tuple unpacking
+                for v in (x0, x1, x2):
+                    if v is not None and not isinstance(v, self._ACCEPTED_TYPES):
+                        raise Vector3ComponentArgumentError(
+                            invalid_type=",".join(type(z).__name__ for z in (x0, x1, x2)))
+                return float(x0), float(x1), float(x2)
             else:
                 if not isinstance(x, self._ACCEPTED_TYPES):
                     raise Vector3ComponentArgumentError(invalid_type=type(x).__name__)
                 return float(x), float(x), float(x)
         else:
-            if x and not isinstance(x, self._ACCEPTED_TYPES):
+            if x is not None and not isinstance(x, self._ACCEPTED_TYPES):
                 raise Vector3ComponentArgumentError(invalid_type=type(x).__name__)
-            if y and not isinstance(y, self._ACCEPTED_TYPES):
+            if y is not None and not isinstance(y, self._ACCEPTED_TYPES):
                 raise Vector3ComponentArgumentError(invalid_type=type(y).__name__)
-            if z and not isinstance(z, self._ACCEPTED_TYPES):
+            if z is not None and not isinstance(z, self._ACCEPTED_TYPES):
                 raise Vector3ComponentArgumentError(invalid_type=type(z).__name__)
-            return float(x) if x else 0.0, float(y) if y else 0.0, float(z) if z else 0.0
+            return (
+                float(x) if x else 0.0, 
+                float(y) if y else 0.0, 
+                float(z) if z else 0.0
+                )
 
     def __repr__(self) -> str:
         return f"Vector3: [{self._x}, {self._y}, {self._z}]"
@@ -81,52 +90,56 @@ class Vector3(object):
         """Add another Vector3 and return a new Vector3"""
         if not isinstance(other, type(self)):
             raise Vector3ArgumentError(invalid_type=type(other))
-        return Vector3([a + b for a, b in zip(self.as_tuple(), other.as_tuple())])
+        a, b = self.as_tuple(), other.as_tuple()
+        return Vector3([x + y for x, y in zip(a, b)])
 
-    def __iadd__(self, other: "Vector3") -> "self":
+    def __iadd__(self, other: "Vector3") -> Self:
         """Add another Vector3 and return self"""
         if not isinstance(other, type(self)):
             raise Vector3ArgumentError(invalid_type=type(other))
-        self._x, self._y, self._z = [a + b for a, b in zip(self.as_tuple(), other.as_tuple())]
+        a, b = self.as_tuple(), other.as_tuple()
+        self._x, self._y, self._z = [x + y for x, y in zip(a,b)]
         return self
 
     def __sub__(self, other: "Vector3") -> "Vector3":
         """Subtract another Vector3 and return a new Vector3"""
         if not isinstance(other, type(self)):
             raise Vector3ArgumentError(invalid_type=type(other))
-        return Vector3([a - b for a, b in zip(self.as_tuple(), other.as_tuple())])
+        a, b = self.as_tuple(), other.as_tuple()
+        return Vector3([x - y for x, y in zip(a,b)])
 
-    def __isub__(self, other: "Vector3") -> "self":
+    def __isub__(self, other: "Vector3") -> "Vector3":
         """Subtract another Vector3 and return self."""
         if not isinstance(other, type(self)):
             raise Vector3ArgumentError(invalid_type=type(other))
-        self._x, self._y, self._z = [a - b for a, b in zip(self.as_tuple(), other.as_tuple())]
+        a, b = self.as_tuple(), other.as_tuple()
+        self._x, self._y, self._z = [x - y for x, y in zip(a,b)]
         return self
 
-    def __mul__(self, other: Union[int, float]) -> "Vector3":
+    def __mul__(self, other: int | float) -> "Vector3":
         """Multiply by a number and return a new Vector3."""
         if not isinstance(other, self._ACCEPTED_TYPES):
             raise NumTypeArgumentError(invalid_type=type(other))
-        return Vector3([a * other for a in self.as_tuple()])
+        return Vector3([a * other for a in (self._x, self._y, self._z)])
 
-    def __imul__(self, other: Union[int, float]) -> "self":
+    def __imul__(self, other: int | float) -> Self:
         """Multiply by a number and return self."""
         if not isinstance(other, self._ACCEPTED_TYPES):
             raise NumTypeArgumentError(invalid_type=type(other))
-        self._x, self._y, self._z = [a * other for a in self.as_tuple()]
+        self._x, self._y, self._z = [a * other for a in (self._x, self._y, self._z)]
         return self
 
-    def __truediv__(self, other: Union[int, float]) -> "Vector3":
+    def __truediv__(self, other: int | float) -> "Vector3":
         """Divide by a number and return a new Vector3."""
         if not isinstance(other, self._ACCEPTED_TYPES):
             raise NumTypeArgumentError(invalid_type=type(other))
-        return Vector3([a / other for a in self.as_tuple()])
+        return Vector3([a / other for a in (self._x, self._y, self._z)])
 
-    def __itruediv__(self, other: Union[int, float]) -> "self":
+    def __itruediv__(self, other: int | float) -> Self:
         """Divide by a number and return self."""
         if not isinstance(other, self._ACCEPTED_TYPES):
             raise NumTypeArgumentError(invalid_type=type(other))
-        self._x, self._y, self._z = [a / other for a in self.as_tuple()]
+        self._x, self._y, self._z = [a / other for a in (self._x, self._y, self._z)]
         return self
 
     @property
@@ -135,7 +148,7 @@ class Vector3(object):
         return self._x
 
     @x.setter
-    def x(self, value: Union[int, float]) -> None:
+    def x(self, value: int | float) -> None:
         if isinstance(value, self._ACCEPTED_TYPES):
             self._x = value
         else:
@@ -147,7 +160,7 @@ class Vector3(object):
         return self._y
 
     @y.setter
-    def y(self, value: Union[int, float]) -> None:
+    def y(self, value: int | float) -> None:
         if isinstance(value, self._ACCEPTED_TYPES):
             self._y = value
         else:
@@ -159,7 +172,7 @@ class Vector3(object):
         return self._z
 
     @z.setter
-    def z(self, value: Union[int, float]) -> None:
+    def z(self, value: int | float) -> None:
         if isinstance(value, self._ACCEPTED_TYPES):
             self._z = value
         else:
@@ -199,7 +212,7 @@ class Vector3(object):
         angle = acos_ * 180 / pi
         return round(angle, precision)
 
-    def as_tuple(self) -> List[float]:
+    def as_tuple(self) -> tuple[float, float, float]:
         """Return this Vector3's components as a X, Y, Z tuple."""
         return self._x, self._y, self._z
 
